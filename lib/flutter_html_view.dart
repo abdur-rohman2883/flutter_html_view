@@ -7,22 +7,22 @@ import 'package:url_launcher/url_launcher.dart';
 
 class HtmlView extends StatelessWidget {
   final String data;
-  final Function onLaunchFail;
+  final Function? onLaunchFail;
   final bool scrollable;
-  final EdgeInsets padding;
-  Map<String, String> stylingOptions;
-  BuildContext ctx;
-  MarkdownStyleSheet styleSheet;
+  final EdgeInsets? padding;
+  Map<String, String>? stylingOptions;
+  late BuildContext ctx;
+  MarkdownStyleSheet? styleSheet;
 
   /// If [scrollable] is set to false then you must handle scrolling outside of this widget.
   /// This can be acheived by using a [SingleChildScrollView].
   HtmlView(
-      {this.data,
+      {required this.data,
       this.stylingOptions,
       this.onLaunchFail,
       this.scrollable = true,
       this.padding,
-      this.styleSheet = null});
+      this.styleSheet});
 
   @override
   Widget build(BuildContext context) {
@@ -30,14 +30,14 @@ class HtmlView extends StatelessWidget {
     if (scrollable) {
       return Markdown(
         data: _htmlMd(data, stylingOptions),
-        onTapLink: (url) {
-          if (url.startsWith("http://") || url.startsWith("https://")) {
-            _launchURL(url);
+        onTapLink: (text, href, title) {
+          if (text.startsWith("http://") || text.startsWith("https://")) {
+            _launchURL(text);
           } else {
-            _launchOtherURL(url);
+            _launchOtherURL(text);
           }
         },
-        padding: padding,
+        padding: padding ?? EdgeInsets.all(0),
         styleSheet: styleSheet,
       );
     } else {
@@ -46,11 +46,11 @@ class HtmlView extends StatelessWidget {
         child: MarkdownBody(
           // Doesn't use a list view, hence no scrolling.
           data: _htmlMd(data, stylingOptions),
-          onTapLink: (url) {
-            if (url.startsWith("http://") || url.startsWith("https://")) {
-              _launchURL(url);
+          onTapLink: (text, href, title) {
+            if (text.startsWith("http://") || text.startsWith("https://")) {
+              _launchURL(text);
             } else {
-              _launchOtherURL(url);
+              _launchOtherURL(text);
             }
           },
           styleSheet: styleSheet,
@@ -59,7 +59,7 @@ class HtmlView extends StatelessWidget {
     }
   }
 
-  String _htmlMd(String html, Map<String, String> stylingOptions) {
+  String _htmlMd(String html, Map<String, String>? stylingOptions) {
     if (stylingOptions != null) {
       return html2md.convert(html, styleOptions: stylingOptions);
     } else {
@@ -79,9 +79,8 @@ class HtmlView extends StatelessWidget {
         ),
       );
     } catch (e) {
-      if (this.onLaunchFail != null) {
-        this.onLaunchFail(url);
-      }
+      this.onLaunchFail?.call(url);
+
       debugPrint(e.toString());
     }
   }
@@ -91,9 +90,8 @@ class HtmlView extends StatelessWidget {
       await launch(url);
     } else {
       debugPrint('Could not launch $url');
-      if (this.onLaunchFail != null) {
-        this.onLaunchFail(url);
-      }
+
+      this.onLaunchFail?.call(url);
     }
   }
 }
